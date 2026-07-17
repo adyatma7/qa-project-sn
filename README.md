@@ -43,7 +43,7 @@ pytest
 ```
 
 ## Reports
-**Live report:** `https://YOUR-USERNAME.github.io/YOUR-REPO/report.html`
+**Live report:** `https://adyatma7.github.io/qa-project-sn/report.html`
 — replace with your actual GitHub Pages URL once enabled (see setup note
 below). Updates automatically after every push to `main`, pass or fail.
 
