@@ -100,6 +100,16 @@ buggy behavior — it stays `xfail(strict=True)`, asserting what *should*
 happen, so it will loudly fail the build the day the bug gets fixed,
 rather than silently staying green forever.
 
+**Not every adversarial test finds a bug, and that's a legitimate result
+too.** Phase 2's exploratory cases — an absurdly large transfer amount, an
+empty payee name — were written the same way as Phase 1's empty-credentials
+test: genuinely not knowing the outcome in advance. Both times, ParaBank
+handled it correctly. That's not a wasted test; it's a confirmed, documented
+finding ("balance validation works," "required-field validation works") —
+see `docs/requirements/transfer.md` and `bill-pay.md`. The discipline is the
+same either way: write the adversarial case, run it, record what's actually
+true, don't assume the outcome before checking.
+
 **Trade-off, stated plainly:** Chromium only, no load testing, no
 white-box access to ParaBank's server code — see Testing Scope above for
 the full list and why each is excluded for now rather than silently

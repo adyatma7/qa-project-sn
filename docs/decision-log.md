@@ -86,3 +86,23 @@ slash, so it correctly appends instead of resetting.
 for this one shared reason, not three separate problems — worth checking
 for a single root cause across similar failures before debugging each test
 individually.
+
+## DEC-010: Transfer/Bill Pay Selectors Used With Partial Confidence
+**Context:** Phase 2 needed form field selectors for `transfer.htm` and
+`billpay.htm` without direct live-DOM access this session.
+**What's confirmed:** Transfer's field names (`fromAccountId`,
+`toAccountId`, `amount`) are confirmed against ParaBank's own REST service
+source code (github.com/parasoft/parabank). Bill Pay's field name pattern
+(`payee.name`, `payee.address.street`, etc.) is inferred from the
+confirmed REST API's XML payload structure plus the established
+`customer.firstName`-style naming pattern already proven correct on the
+registration page.
+**What's not confirmed:** neither form's exact live HTML has been
+inspected this session. Same category of risk as DEC-007 before it was
+confirmed by an actual run.
+**Resolution:** ship the tests, expect the first real run might need a
+selector fix, update this entry with the outcome either way — that's the
+process, not a failure of it.
+**Update, confirmed by an actual run:** all selectors for both forms were
+correct on the first try — no fixes needed. Confidence from the source-code
+cross-reference (rather than a live DOM inspection) held up in this case.
