@@ -1,6 +1,6 @@
 # QA Automation Portfolio — ParaBank
 
-[![QA Automation CI](https://github.com/YOUR-USERNAME/YOUR-REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR-USERNAME/YOUR-REPO/actions/workflows/ci.yml)
+[![QA Automation CI](https://github.com/adyatma7/qa-project-sn/actions/workflows/ci.yml/badge.svg)](https://github.com/adyatma7/qa-project-sn/actions/workflows/ci.yml)
 
 > **Replace `YOUR-USERNAME/YOUR-REPO` above with your actual GitHub path**
 > (e.g. `sanjaya/qa-project-sn`) once pushed — GitHub won't generate a real
@@ -35,6 +35,8 @@ _Fill in — see blueprint Section 7._
 ```bash
 cd playwright-tests
 python3 -m venv .venv && source .venv/bin/activate
+# OR
+python -m venv .venv && .venv\Scripts\activate.bat
 pip install -r requirements.txt
 playwright install --with-deps
 pytest
