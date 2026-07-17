@@ -106,3 +106,18 @@ process, not a failure of it.
 **Update, confirmed by an actual run:** all selectors for both forms were
 correct on the first try — no fixes needed. Confidence from the source-code
 cross-reference (rather than a live DOM inspection) held up in this case.
+
+## DEC-011: GitHub Pages for the Report, Not Just a CI Artifact
+**Context:** Phase 3's goal (blueprint Section 9) is a report a stranger
+can open without cloning the repo. A CI artifact download requires a
+GitHub account and several clicks — not "just open a link."
+**Chosen:** deploy `reports/report.html` to GitHub Pages on every push to
+`main`, via a second CI job (`deploy-report`) using GitHub's official
+`actions/deploy-pages` action rather than pushing to a `gh-pages` branch
+manually.
+**Trade-off accepted:** requires a one-time manual setting change in the
+repo (Settings → Pages → Source: GitHub Actions) that can't be done from
+a workflow file — documented plainly in the README rather than assumed.
+**Also:** `deploy-report` runs with `if: always()` so a failing test run
+still publishes its report — a failure is exactly the moment a reader
+most wants to see the detail, not the moment to hide it.

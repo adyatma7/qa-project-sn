@@ -4,8 +4,13 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
-  playwright-tests:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,3 +28,24 @@ jobs:
         with:
           name: pytest-report
           path: playwright-tests/reports/
+      - name: Package report for Pages
+        if: always()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: playwright-tests/reports
+
+  # Publishes the HTML report so it's viewable by a link, not just a
+  # downloadable CI artifact. Runs even if tests failed (if: always()) —
+  # a failure report is exactly what a reader most wants to see. Only
+  # deploys from main, never from pull requests.
+  deploy-report:
+    if: always() && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
