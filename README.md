@@ -2,10 +2,6 @@
 
 [![QA Automation CI](https://github.com/adyatma7/qa-project-sn/actions/workflows/ci.yml/badge.svg)](https://github.com/adyatma7/qa-project-sn/actions/workflows/ci.yml)
 
-> **Replace `YOUR-USERNAME/YOUR-REPO` above with your actual GitHub path**
-> (e.g. `sanjaya/qa-project-sn`) once pushed — GitHub won't generate a real
-> badge for a placeholder.
-
 
 > **Status: Phase 0 (foundation).** This README is intentionally incomplete —
 > it fills in as each phase closes. See `QA-PORTFOLIO-BLUEPRINT.md` for the
@@ -43,15 +39,8 @@ pytest
 ```
 
 ## Reports
-**Live report:** `https://adyatma7.github.io/qa-project-sn/report.html`
-— replace with your actual GitHub Pages URL once enabled (see setup note
-below). Updates automatically after every push to `main`, pass or fail.
-
-**One-time setup required** (I can't do this part — it's a GitHub repo
-setting, not a file): go to your repo's **Settings → Pages**, and under
-"Build and deployment," set **Source: GitHub Actions**. Without this,
-`deploy-report` in the CI workflow will fail with a permissions error —
-that's expected until this is done once.
+**Live report:** https://adyatma7.github.io/qa-project-sn/report.html
+— updates automatically after every push to `main`, pass or fail.
 
 ## Known Bugs
 - **[BUG-001](docs/bugs/BUG-001.md) — Critical.** Submitting an incorrect

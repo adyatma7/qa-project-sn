@@ -121,3 +121,7 @@ a workflow file — documented plainly in the README rather than assumed.
 **Also:** `deploy-report` runs with `if: always()` so a failing test run
 still publishes its report — a failure is exactly the moment a reader
 most wants to see the detail, not the moment to hide it.
+**Update, confirmed by an actual run:** worked on the first try — both
+`test` and `deploy-report` succeeded, live report publicly reachable at
+`https://adyatma7.github.io/qa-project-sn/report.html`, including full
+detail on the `xfail`ed BUG-001 regression test.

@@ -14,3 +14,10 @@
 Detailed step-by-step test cases (preconditions, exact steps, expected
 result) live in Jira, not here — see DEC-005. This file only tracks the
 ID-level mapping, so it stays small and never goes stale.
+
+## Cross-tool validation (Phase 4)
+6 of the above (LOGIN-01, LOGIN-02, XFER-01, XFER-02, BILL-01, BILL-02)
+are also automated in `selenium-tests/`, not to double coverage but to
+cross-validate — most notably, LOGIN-02 / BUG-001 reproducing identically
+via a second, completely independent tool. See `selenium-tests/README.md`
+for exactly which cases and why.
