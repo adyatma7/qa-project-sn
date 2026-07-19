@@ -6,16 +6,19 @@ what's different and why: selenium-tests/README.md.
 import os
 import pytest
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 
 
 @pytest.fixture
 def driver():
     options = webdriver.ChromeOptions()
     options.add_argument("--headless=new")
-    service = Service(ChromeDriverManager().install())
-    drv = webdriver.Chrome(service=service, options=options)
+    # No explicit Service/driver download step — Selenium 4.6+ bundles
+    # "Selenium Manager," which detects the installed Chrome version and
+    # resolves a matching driver automatically. Originally used the
+    # third-party webdriver-manager package for this; switched after it
+    # failed with a corrupted-download error (see DEC-016) — this removes
+    # an entire dependency instead of just working around the failure.
+    drv = webdriver.Chrome(options=options)
     drv.implicitly_wait(0)  # explicit waits only, see README
     yield drv
     drv.quit()

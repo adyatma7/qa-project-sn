@@ -49,6 +49,9 @@ class BillPayPage:
         ).to_be_visible()
 
     def expect_not_completed(self):
+        # Same race-condition fix as TransferPage — see DEC-012. Wait for
+        # the page to settle before checking, don't check-then-hope.
+        self.page.wait_for_timeout(2000)
         expect(
             self.page.get_by_role("heading", name="Bill Payment Complete")
         ).not_to_be_visible()

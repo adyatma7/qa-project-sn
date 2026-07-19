@@ -29,9 +29,19 @@ class BillPayPage:
         account_number: str,
         amount: str,
     ):
-        self.wait.until(
+        # Click (focus) explicitly before typing, and always let the next
+        # click below force a real blur — even when `name` is empty.
+        # send_keys("") alone sends zero keystrokes and never touches the
+        # field at all, which is the experiment described in
+        # docs/bugs/OBSERVATION-002.md: does a real focus+blur, even with
+        # nothing typed, change the result vs the original no-op version?
+        name_field = self.wait.until(
             EC.presence_of_element_located((By.NAME, "payee.name"))
-        ).send_keys(name)
+        )
+        name_field.click()
+        if name:
+            name_field.send_keys(name)
+        self.driver.find_element(By.NAME, "payee.address.street").click()  # forces blur on name field
         self.driver.find_element(By.NAME, "payee.address.street").send_keys(street)
         self.driver.find_element(By.NAME, "payee.address.city").send_keys(city)
         self.driver.find_element(By.NAME, "payee.address.state").send_keys(state)

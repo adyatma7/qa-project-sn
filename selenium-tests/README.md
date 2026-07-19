@@ -52,6 +52,17 @@ This folder has its own `requirements.txt` and its own virtual
 environment, deliberately separate from `playwright-tests/`, to avoid any
 version conflict between the two frameworks' dependency trees.
 
+### `select_by_index()` doesn't reliably work (found the hard way)
+Selenium's `Select.select_by_index()` matches against the option
+element's `index` HTML *attribute* — but browsers don't literally write
+`index="0"` into `<option>` markup; it's a computed DOM *property*, not a
+source attribute. On modern Selenium/browser combinations this raises
+`NoSuchElementException` even when the dropdown clearly has options.
+Fixed in `pages/transfer_page.py` by selecting via
+`Select(...).options[index].click()` instead — operates on the real
+option `WebElement` directly, sidestepping the broken attribute match.
+Full story: `docs/decision-log.md` DEC-013.
+
 ## How to run
 ```bash
 cd selenium-tests
@@ -59,6 +70,6 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 pytest -v
 ```
-Requires a real Chrome installation locally. `webdriver-manager` handles
-downloading a matching ChromeDriver automatically — it does not install
-Chrome itself.
+Requires a real Chrome installation locally. Driver management is handled
+automatically by Selenium 4.6+'s built-in Selenium Manager — no separate
+driver download step or third-party package needed (see DEC-016).

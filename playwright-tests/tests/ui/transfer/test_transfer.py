@@ -5,6 +5,7 @@ known trade-off as Phase 1, see DEC-006).
 """
 from pages.login_page import LoginPage
 from pages.transfer_page import TransferPage
+import pytest
 
 
 def _login(page):
@@ -21,6 +22,13 @@ def test_valid_transfer_completes(page):
     transfer_page.expect_success()
 
 
+@pytest.mark.xfail(
+    reason="BUG-002: Fund Transfer does not enforce a sufficient-balance "
+    "check (docs/bugs/BUG-002.md). strict=False — only one confirmed run "
+    "so far with the corrected assertion, not yet enough data to call it "
+    "deterministic the way BUG-001 needed multiple runs to classify.",
+    strict=False,
+)
 def test_transfer_exceeding_balance(page):
     # ADVERSARIAL, exploratory — same spirit as Phase 1's empty-credentials
     # test. ParaBank is commonly reported (unconfirmed this session) to not

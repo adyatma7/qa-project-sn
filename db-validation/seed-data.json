@@ -1,0 +1,22 @@
+{
+  "customers": [
+    {
+      "id": 12212,
+      "first_name": "John",
+      "last_name": "Smith",
+      "street": "1 Main St",
+      "city": "Beverly Hills",
+      "state": "CA",
+      "zip_code": "90210",
+      "phone_number": "310-447-4121",
+      "ssn": "000-00-0000",
+      "username": "john"
+    }
+  ],
+  "accounts": [
+    { "id": 13344, "customer_id": 12212, "type": "CHECKING", "balance": 5022.93 }
+  ],
+  "transactions": [
+    { "account_id": 13344, "type": "CREDIT", "amount": 5022.93, "description": "Initial deposit" }
+  ]
+}

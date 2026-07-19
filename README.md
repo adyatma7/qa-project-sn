@@ -28,14 +28,46 @@ _Fill in once the repo structure stabilizes past Phase 2._
 _Fill in — see blueprint Section 7._
 
 ## How to Run
+
+**Playwright suite:**
 ```bash
+# macOS/Linux
 cd playwright-tests
 python3 -m venv .venv && source .venv/bin/activate
-# OR
-python -m venv .venv && .venv\Scripts\activate.bat
 pip install -r requirements.txt
 playwright install --with-deps
-pytest
+pytest -v
+```
+```powershell
+# Windows PowerShell
+cd playwright-tests
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+playwright install --with-deps
+pytest -v
+```
+
+**Selenium suite** (separate, isolated environment — see
+`selenium-tests/README.md`):
+```powershell
+# Windows PowerShell
+cd selenium-tests
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+pytest -v
+```
+Requires a real Chrome installation locally (CI doesn't need this step —
+`ubuntu-latest` runners ship with Chrome already).
+
+```powershell
+cd db-validation
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python build_and_validate.py
+pytest -v
 ```
 
 ## Reports
@@ -43,11 +75,25 @@ pytest
 — updates automatically after every push to `main`, pass or fail.
 
 ## Known Bugs
-- **[BUG-001](docs/bugs/BUG-001.md) — Critical.** Submitting an incorrect
-  password for a valid username (`john`) does not reject the login —
-  it authenticates the user anyway, alongside a generic "internal error"
-  banner. Reproduced twice, consistently. Regression test exists and is
-  marked `xfail(strict=True)` so it won't silently start passing unnoticed.
+- **[BUG-001](docs/bugs/BUG-001.md) — Critical, intermittent.** Submitting
+  an incorrect password for a valid username (`john`) sometimes
+  authenticates the user anyway, alongside a generic "internal error"
+  banner, instead of being rejected. Reproduced 2/2 in Playwright; did
+  not reproduce in a Selenium cross-check, so treated as intermittent
+  rather than deterministic. Regression tests in both frameworks are
+  marked `xfail(strict=False)` accordingly.
+- **[BUG-002](docs/bugs/BUG-002.md) — High, cross-tool confirmed.** Fund
+  Transfer does not enforce a sufficient-balance check — a transfer of
+  999,999,999 completes successfully. Confirmed in both Playwright (2/2)
+  and Selenium. `xfail(strict=False)` in both suites.
+- **Under investigation:** [OBSERVATION-002](docs/bugs/OBSERVATION-002.md)
+  — whether Bill Pay accepts an empty payee name. Playwright (2/2) says
+  rejected; Selenium (3/3) says accepted — each tool is internally
+  consistent, which points away from random flakiness and toward
+  `send_keys("")` in Selenium not triggering the same form events as
+  Playwright's `.fill("")`. A concrete experiment is written up to settle
+  it either way; not filed as a bug yet because it may turn out to be a
+  gap in how the Selenium test simulates a real user, not a ParaBank bug.
 
 ## Lessons Learned
 
@@ -94,6 +140,30 @@ surprise — which is exactly the point of writing risks down in advance.
 It's also the concrete case for moving negative-path tests to
 self-registered, unique-per-run accounts sooner rather than later.
 
+**Cross-tool testing caught a bug that single-tool testing missed
+entirely.** Porting 6 tests to Selenium (Phase 4) wasn't just about
+proving Selenium competency — it directly found a real problem: the
+Playwright suite's `expect_not_completed()` checked for a success heading
+immediately after form submission, which could report "not visible" a
+moment before a delayed success page actually rendered — a false pass,
+not a real rejection. The Selenium port happened to include a short wait
+before checking (for an unrelated reason) and caught "Bill Payment
+Complete" actually appearing where Playwright had reported success at
+rejecting it. Two features (`XFER-02`, `BILL-02`) that were marked
+"confirmed, no bug" in the traceability matrix had to be reopened for
+re-verification once the race condition was fixed in both frameworks. The
+lesson generalizes past this one bug: a test passing is not the same
+claim as a test being correct, and a second tool built differently is one
+of the more reliable ways to catch that gap.
+
+**A bug can be real and still not be deterministic — and the test
+strategy should say so honestly.** BUG-001 reproduced 2 out of 2 times in
+Playwright, then didn't reproduce at all on the first Selenium attempt.
+Rather than treat that as disproving the bug, both regression tests were
+downgraded from `xfail(strict=True)` to `strict=False` — an intermittent
+bug deserves a marker that won't break the build on a legitimate pass,
+which is a different (and more honest) claim than "this always fails."
+
 **The adversarial testing tactic paid off for real, on the second try.** The
 negative-login test was deliberately written to probe for a real finding
 (blueprint Section 7), not just to pad coverage. First run looked like it
@@ -102,9 +172,8 @@ it twice more, back to back, showed the identical failure shape with the
 account's real name intact, which ruled that out. Confirmed as
 [BUG-001](docs/bugs/BUG-001.md): an incorrect password authenticates the
 user instead of being rejected. The test wasn't rewritten to match the
-buggy behavior — it stays `xfail(strict=True)`, asserting what *should*
-happen, so it will loudly fail the build the day the bug gets fixed,
-rather than silently staying green forever.
+buggy behavior — it stays `xfail`, asserting what *should* happen, so it
+keeps failing loudly rather than silently going green forever.
 
 **Not every adversarial test finds a bug, and that's a legitimate result
 too.** Phase 2's exploratory cases — an absurdly large transfer amount, an
@@ -115,6 +184,31 @@ finding ("balance validation works," "required-field validation works") —
 see `docs/requirements/transfer.md` and `bill-pay.md`. The discipline is the
 same either way: write the adversarial case, run it, record what's actually
 true, don't assume the outcome before checking.
+
+**Fixing a false-negative assertion immediately surfaced a real,
+previously-hidden bug.** The race-condition fix (above) wasn't just a
+theoretical correction — re-running Transfer's adversarial test with it
+confirmed [BUG-002](docs/bugs/BUG-002.md): a transfer of 999,999,999
+actually completes, no balance check enforced. The earlier "pass" on
+this exact test had been masking that the whole time. This is the
+clearest evidence in the whole project that a green test is not the same
+claim as a correct one.
+
+**A cross-tool disagreement can itself be the finding — and ruling out
+the wrong explanation matters as much as finding the right one.** The
+empty-payee-name question ([OBSERVATION-002](docs/bugs/OBSERVATION-002.md))
+first looked like shared-account flakiness. But re-running both suites
+showed each tool was internally *consistent* with itself (Playwright 2/2
+one way, Selenium 3/3 the other) — which argues against shared, randomly
+fluctuating state like account balance, and toward something
+deterministic about how each tool interacts with the page. Current best
+explanation: Selenium's `send_keys("")` sends zero keystrokes and never
+fires the input/blur events that Playwright's `.fill("")` fires even for
+an empty value — meaning the Selenium test may not be exercising the app
+the way an actual user would. If that holds up, this was never a
+ParaBank bug at all; it was a gap in how faithfully one test simulated
+real interaction. A concrete experiment is written up to settle it either
+way, rather than guessing and moving on.
 
 **Trade-off, stated plainly:** Chromium only, no load testing, no
 white-box access to ParaBank's server code — see Testing Scope above for

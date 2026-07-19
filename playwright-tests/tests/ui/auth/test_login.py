@@ -17,10 +17,14 @@ def test_valid_login_reaches_accounts_overview(page):
 
 @pytest.mark.xfail(
     reason="BUG-001: invalid password authenticates the user instead of "
-    "rejecting the login (docs/bugs/BUG-001.md). strict=True on purpose — "
-    "the day ParaBank fixes this, this test flips to an unexpected pass "
-    "and fails the build, which is the signal to remove this marker.",
-    strict=True,
+    "rejecting the login (docs/bugs/BUG-001.md). Reproduced 2/2 in this "
+    "tool, but did NOT reproduce in a Selenium cross-check (see "
+    "selenium-tests/), so this is understood as intermittent rather than "
+    "guaranteed — strict=False on purpose now. A guaranteed 'always "
+    "fails' claim (strict=True) would be an overclaim given that "
+    "evidence; downgraded from an earlier version of this marker that "
+    "did use strict=True before the cross-tool run.",
+    strict=False,
 )
 def test_invalid_password_shows_error(page):
     login_page = LoginPage(page)

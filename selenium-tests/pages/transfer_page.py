@@ -22,8 +22,22 @@ class TransferPage:
         self.wait.until(
             EC.presence_of_element_located((By.ID, "amount"))
         ).send_keys(amount)
-        Select(self.driver.find_element(By.ID, "fromAccountId")).select_by_index(from_index)
-        Select(self.driver.find_element(By.ID, "toAccountId")).select_by_index(to_index)
+        # Explicitly wait for the dropdown to actually have options before
+        # touching .options — found via a real run that the select can be
+        # present in the DOM before its options finish populating,
+        # producing "IndexError: list index out of range" otherwise. Not
+        # the same bug as DEC-013, a new one found on the very next run.
+        self.wait.until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#fromAccountId option"))
+        )
+        # NOT select_by_index() on purpose — found via an actual run that
+        # it raises NoSuchElementException on modern Selenium. It matches
+        # against the option's "index" HTML ATTRIBUTE, which browsers
+        # don't literally set in markup (index is a computed DOM
+        # property, not an attribute) — a known Selenium 4.x regression,
+        # not a mistake in the ParaBank page. See DEC-013.
+        Select(self.driver.find_element(By.ID, "fromAccountId")).options[from_index].click()
+        Select(self.driver.find_element(By.ID, "toAccountId")).options[to_index].click()
         self.driver.find_element(By.CSS_SELECTOR, 'input[value="Transfer"]').click()
 
     def expect_success(self):

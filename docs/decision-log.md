@@ -125,3 +125,130 @@ most wants to see the detail, not the moment to hide it.
 `test` and `deploy-report` succeeded, live report publicly reachable at
 `https://adyatma7.github.io/qa-project-sn/report.html`, including full
 detail on the `xfail`ed BUG-001 regression test.
+
+## DEC-012: Fixed a Race Condition in `expect_not_completed()` (Both Frameworks)
+**Found by:** cross-tool testing — the Selenium port of
+`test_empty_payee_name_is_rejected` failed, revealing "Bill Payment
+Complete" actually appears for an empty payee name, contradicting the
+Playwright version's apparent pass on the same case.
+**Root cause:** `not_to_be_visible()` in Playwright can early-exit as
+"not visible YET" if checked immediately after submission, before a
+delayed success page finishes rendering — a false pass, not a real
+rejection. The Selenium version happened to include a 2-second sleep
+(for an unrelated reason — no clean "assert absence" primitive, see
+`selenium-tests/README.md`) and incidentally avoided the race.
+**Fix:** both `TransferPage.expect_not_completed()` and
+`BillPayPage.expect_not_completed()` in `playwright-tests/pages/` now
+wait 2 seconds before asserting, matching the Selenium behavior
+deliberately instead of by accident.
+**Why this matters beyond the fix itself:** a test that passes isn't
+automatically a test that's *correct* — this one gave a false sense of
+confirmed behavior for two features (`XFER-02`, `BILL-02`) until a
+second, differently-built tool exposed the gap. Cross-tool validation
+caught something single-tool testing missed, which is itself the
+strongest argument found so far for having ported anything to Selenium
+at all.
+**Status:** `XFER-02` and `BILL-02` marked for re-verification in
+`traceability-matrix.md` — not yet re-run with the fix.
+**Update, confirmed by an actual re-run:** `XFER-02` is now resolved —
+the fixed assertion confirms the transfer genuinely completes, filed as
+[BUG-002](bugs/BUG-002.md). `BILL-02` is NOT resolved — the two
+frameworks now disagree with each other on the same scenario even with
+the fix applied. See `OBSERVATION-002.md` for the ongoing investigation;
+not treating "conflicting results" as license to guess which one is
+right.
+
+## DEC-013: Selenium's `select_by_index()` Doesn't Work Reliably, Worked Around
+**Found by:** running the Selenium Transfer tests for real —
+`NoSuchElementException: Could not locate element with index 0` on a
+`<select>` element that visibly has options.
+**Root cause:** `Select.select_by_index()` matches against the option's
+`index` HTML *attribute*. Browsers don't literally write `index="0"` into
+option markup — `index` is a computed DOM *property*, not a source
+attribute — so the match never succeeds on modern Selenium/browser
+combinations. A known category of Selenium 4.x behavior change, not a
+mistake in ParaBank's page.
+**Fix:** `TransferPage` selects options via
+`Select(...).options[index].click()` instead — operates on the actual
+option `WebElement`, bypassing the broken attribute-matching path
+entirely.
+
+## DEC-014: Fixed a Second Selenium Timing Bug on the Very Next Run
+**Found by:** running the (already once-fixed) Selenium Transfer tests —
+`IndexError: list index out of range` on `Select(...).options[0]`.
+**Root cause:** the `<select>` element was present in the DOM (satisfying
+the wait for the `#amount` field elsewhere on the page), but its
+`<option>` children hadn't finished populating yet at the moment
+`.options` was accessed — a separate timing issue from DEC-013's
+attribute-matching bug, not a re-occurrence of it.
+**Fix:** added an explicit wait for
+`presence_of_element_located((By.CSS_SELECTOR, "#fromAccountId option"))`
+before touching `.options` at all.
+**Why this is here as its own entry, not folded into DEC-013:** two
+different Selenium timing/API issues surfaced back to back on the same
+page object. Worth keeping them separately logged rather than merging,
+since "Selenium needs more explicit waiting than Playwright" is a general
+theme (see selenium-tests/README.md) but each concrete instance of it is
+a distinct, specific thing that had to be found and fixed on its own.
+
+## DEC-015: Recognized a Tool-Consistency Pattern That Ruled Out a Hypothesis
+**Context:** OBSERVATION-002 (empty payee name) had two competing
+explanations: shared-account balance depletion, or a tool-specific
+interaction difference.
+**Key observation:** re-running both suites showed each tool internally
+consistent across multiple runs (Playwright 2/2 one way, Selenium 3/3 the
+other), rather than inconsistent within either. Shared, globally-changing
+state (like account balance) would be expected to cause noise *within*
+each tool's repeated runs too, not a clean split that lines up exactly
+with which tool was used.
+**Resolution:** discarded the balance-depletion hypothesis in favor of a
+more specific one — `Selenium's send_keys("")` dispatches no keyboard
+events at all for an empty string, unlike Playwright's `.fill("")`, which
+sets the value and fires input/change events regardless. If ParaBank has
+any client-side validation gated on a field being touched-and-left-empty,
+Selenium's version of this test may not be exercising the app the way a
+real user would.
+**Why this is logged even though nothing is resolved yet:** the reasoning
+process that ruled out one hypothesis and proposed a sharper one is the
+valuable part, independent of which explanation turns out to be right —
+this is what distinguishes noticing a pattern in results from just
+re-running a test and hoping.
+
+## DEC-016: Dropped webdriver-manager, Use Selenium's Built-In Manager Instead
+**Found by:** running the suite for real —
+`zipfile.BadZipFile: File is not a zip file` inside `webdriver-manager`'s
+own driver-download/cache logic, unrelated to any test or page object
+code.
+**Root cause:** `webdriver-manager` (a third-party package) downloads and
+unpacks a ChromeDriver archive itself; the download was interrupted or
+corrupted, and it cached the bad file.
+**Fix, chosen deliberately over just clearing the cache and retrying:**
+Selenium 4.6+ ships "Selenium Manager," a built-in driver-resolution tool
+that detects the installed Chrome version and downloads a matching driver
+automatically — `webdriver.Chrome(options=options)` alone is enough, no
+`Service`/`ChromeDriverManager` needed.
+**Why remove the dependency instead of patching around the failure:**
+the bug lived entirely inside a package that turned out to be
+unnecessary — Selenium had already solved this problem natively for
+several years. One fewer dependency is one fewer thing that can fail this
+way again.
+
+## DEC-016: `webdriver-manager` Was Accidentally Missing From requirements.txt
+**Found by:** the person running this project locally hit
+`zipfile.BadZipFile: File is not a zip file` — initially looked like a
+corrupted download, but checking the actual repo file revealed
+`webdriver-manager` had been dropped from `selenium-tests/requirements.txt`
+during an earlier rewrite of that file, an authoring mistake, not an app
+or environment bug.
+**Fix:** restored `webdriver-manager==4.1.2` to requirements.txt, and
+verified with a completely fresh venv install afterward rather than
+assuming the fix was correct.
+**Also added while fixing this:** `pytest-html`, so `selenium-tests/`
+produces a real report artifact matching `playwright-tests/`, needed for
+the CI job added in the same change (Selenium tests are now part of CI,
+not just run locally).
+**Why this is logged even though it's my own mistake, not ParaBank's:** a
+decision log that only records app findings and never the project's own
+errors would be a curated highlight reel, not an honest record. This one
+cost real debugging time on the other end before the actual cause was
+found — worth being explicit about that cost, not just the fix.

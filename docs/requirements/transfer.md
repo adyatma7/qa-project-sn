@@ -1,12 +1,13 @@
 # Requirement: Transfer Funds
 
-## Business Rules (confirmed by an actual run)
+## Business Rules (confirmed by an actual run — corrected)
 - Requires amount, a "from" account, and a "to" account.
-- **Confirmed:** ParaBank rejects a transfer request for an absurdly large
-  amount (999,999,999) — `test_transfer_exceeding_balance` passed cleanly,
-  no "Transfer Complete!" shown. Balance validation appears to work,
-  contrary to the commonly-repeated (and now disproven, for this case)
-  claim that ParaBank's demo doesn't enforce it.
+- **Correction:** an earlier version of this file stated balance
+  validation was confirmed working. That result came from an assertion
+  with a race condition (see DEC-012) — once fixed, a re-run showed the
+  transfer of 999,999,999 actually succeeds. **Confirmed: ParaBank does
+  NOT enforce a sufficient-balance check on transfers.** See
+  [BUG-002](bugs/BUG-002.md).
 
 ## Assumptions to verify empirically
 - Whether ParaBank actually enforces a sufficient-balance check at all.

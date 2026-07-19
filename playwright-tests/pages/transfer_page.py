@@ -34,8 +34,12 @@ class TransferPage:
         ).to_be_visible()
 
     def expect_not_completed(self):
-        # Defensive assertion for the adversarial case below, where the
-        # actual expected behavior isn't confirmed yet.
+        # Wait for the page to settle BEFORE checking — not_to_be_visible()
+        # can early-exit as "not visible yet" if checked before a delayed
+        # success page finishes rendering, producing a false pass. Found
+        # via cross-tool testing: the Selenium port (which sleeps before
+        # checking) caught a case this original check missed. See DEC-012.
+        self.page.wait_for_timeout(2000)
         expect(
             self.page.get_by_role("heading", name="Transfer Complete!")
         ).not_to_be_visible()

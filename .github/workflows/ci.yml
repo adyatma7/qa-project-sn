@@ -10,7 +10,7 @@ permissions:
   id-token: write
 
 jobs:
-  test:
+  playwright-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,21 +26,46 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: pytest-report
+          name: playwright-report
           path: playwright-tests/reports/
-      - name: Package report for Pages
+      - name: Package Playwright report for Pages
         if: always()
         uses: actions/upload-pages-artifact@v3
         with:
           path: playwright-tests/reports
 
-  # Publishes the HTML report so it's viewable by a link, not just a
-  # downloadable CI artifact. Runs even if tests failed (if: always()) —
-  # a failure report is exactly what a reader most wants to see. Only
-  # deploys from main, never from pull requests.
+  # Separate job on purpose — shows up as its own check in the GitHub UI,
+  # so both tools' results are independently visible, not merged into one
+  # green/red signal. ubuntu-latest ships with Chrome pre-installed, so no
+  # extra browser setup step is needed the way Playwright needs
+  # `playwright install`.
+  selenium-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+        working-directory: selenium-tests
+      - run: pytest -v
+        working-directory: selenium-tests
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selenium-report
+          path: selenium-tests/reports/
+
+  # Publishes the Playwright HTML report so it's viewable by a link, not
+  # just a downloadable CI artifact. Runs even if tests failed
+  # (if: always()) — a failure report is exactly what a reader most wants
+  # to see. Only deploys from main, never from pull requests. Selenium's
+  # report is uploaded as a plain CI artifact above, not published to
+  # Pages yet — kept simple on purpose rather than merging two reports
+  # into one Pages site without being able to verify that actually works.
   deploy-report:
     if: always() && github.ref == 'refs/heads/main'
-    needs: test
+    needs: playwright-tests
     runs-on: ubuntu-latest
     environment:
       name: github-pages

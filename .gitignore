@@ -6,5 +6,6 @@ __pycache__/
 reports/
 *.log
 .DS_Store
-
+.vscode
 QA-PORTFOLIO-BLUEPRINT.md
+future-ideas.md

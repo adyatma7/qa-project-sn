@@ -3,6 +3,7 @@ Phase 4: transfer — High risk per risk-analysis.md, ported per DEC-002.
 """
 from pages.login_page import LoginPage
 from pages.transfer_page import TransferPage
+import pytest
 
 
 def _login(driver):
@@ -19,6 +20,12 @@ def test_valid_transfer_completes(driver):
     transfer_page.expect_success()
 
 
+@pytest.mark.xfail(
+    reason="BUG-002 (docs/bugs/BUG-002.md), now cross-tool confirmed — "
+    "same 'Transfer Complete!' result seen here as in the Playwright "
+    "version. strict=False, consistent with how BUG-001 is handled.",
+    strict=False,
+)
 def test_transfer_exceeding_balance(driver):
     _login(driver)
     transfer_page = TransferPage(driver)
