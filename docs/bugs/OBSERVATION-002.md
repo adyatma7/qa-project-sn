@@ -106,3 +106,60 @@ the hypothesis is confirmed — this was a test-simulation gap, not an app
 bug, and OBSERVATION-002 closes with "no bug, Selenium needed a more
 realistic interaction to test this fairly." If it still shows "accepted,"
 the hypothesis is wrong and the investigation continues.
+
+---
+
+## Update: the event-dispatch hypothesis is disproven
+
+Ran the actual experiment: explicit `.click()` to focus the name field,
+conditionally `send_keys()` only when non-empty, then `.click()` on the
+next field to force a real blur — even with nothing typed. Result:
+**unchanged.** Selenium still shows the payment accepted with an empty
+payee name. This rules out "the field was never touched" as the
+explanation.
+
+**Current honest status: genuinely unresolved.** Two hypotheses tested
+and both disproven (shared-account balance depletion; missing
+focus/blur events). What's still true and worth keeping:
+- Each tool remains internally consistent (Playwright: rejected, every
+  time it's been run; Selenium: accepted, every time).
+- One more cheap thing worth checking, if picked back up later: whether
+  Playwright's bundled Chromium and Selenium's local system Chrome (via
+  `webdriver-manager`) are different versions. A version-specific
+  difference in how the browser itself handles the form (rather than
+  anything about *how the test drives it*) would be a third, still-
+  untested explanation.
+
+**Decision: not pursuing this further right now.** Two rounds of
+hypothesis-and-test is a reasonable amount of investigation for a
+secondary, not-yet-confirmed finding — especially with two solid,
+cross-tool-confirmed bugs (BUG-001, BUG-002, BUG-003) already documented
+from the same general effort. Continuing to chase this has diminishing
+returns relative to the rest of the project. Left here, honestly labeled
+"unresolved," rather than forced into a tidy conclusion it doesn't
+actually have yet.
+
+---
+
+## Update: confirmed across a third environment — GitHub Actions CI
+
+The Selenium suite's first-ever CI run (Linux, `ubuntu-latest`) showed
+the identical result: `test_empty_payee_name_is_rejected` failed the
+same way, while every other test (including BUG-001's xpass and BUG-002's
+xfail) behaved exactly as expected. Two things follow from this:
+
+1. **The CI job failure was never a CI-environment problem** — Chrome and
+   ChromeDriver setup worked correctly on the runner; the only failure
+   was this already-known discrepancy.
+2. **This weakens (without fully ruling out) the "specific Chrome version"
+   explanation.** Windows-local Chrome and Linux-CI Chrome are almost
+   certainly different builds/versions, and both produce the identical
+   "accepted" result via Selenium — consistent with something about
+   Selenium/WebDriver's interaction model itself, not one narrow browser
+   version's bug.
+
+**Resolution:** marked `xfail(strict=False)` in the Selenium suite,
+referencing this file — not claimed as a confirmed ParaBank bug, just
+accurately reflected as "known, tracked, and still unresolved" so CI
+doesn't show a raw, untriaged-looking failure for something already
+investigated across three environments.

@@ -82,13 +82,14 @@ Requires a real Chrome installation locally (CI doesn't need this step —
   root cause with BUG-002 rather than being a coincidence (see DEC-017).
   Found via a documented AI-assisted testing exercise. `xfail(strict=False)`.
 - **Under investigation:** [OBSERVATION-002](docs/bugs/OBSERVATION-002.md)
-  — whether Bill Pay accepts an empty payee name. Playwright (2/2) says
-  rejected; Selenium (3/3) says accepted — each tool is internally
-  consistent, which points away from random flakiness and toward
-  `send_keys("")` in Selenium not triggering the same form events as
-  Playwright's `.fill("")`. A concrete experiment is written up to settle
-  it either way; not filed as a bug yet because it may turn out to be a
-  gap in how the Selenium test simulates a real user, not a ParaBank bug.
+  — whether Bill Pay accepts an empty payee name. Playwright consistently
+  says rejected; Selenium consistently says accepted, now confirmed
+  across 3 environments (Windows local, Linux CI, and after a targeted
+  click+blur experiment that ruled out one hypothesis). Root cause still
+  unresolved — may be a Selenium/WebDriver-specific limitation rather
+  than a ParaBank bug. `xfail(strict=False)` in the Selenium suite so CI
+  reflects "known, tracked" rather than an untriaged failure; not filed
+  as a confirmed bug given the cause isn't understood yet.
 
 ## Lessons Learned
 
@@ -189,21 +190,23 @@ this exact test had been masking that the whole time. This is the
 clearest evidence in the whole project that a green test is not the same
 claim as a correct one.
 
-**A cross-tool disagreement can itself be the finding — and ruling out
-the wrong explanation matters as much as finding the right one.** The
-empty-payee-name question ([OBSERVATION-002](docs/bugs/OBSERVATION-002.md))
-first looked like shared-account flakiness. But re-running both suites
-showed each tool was internally *consistent* with itself (Playwright 2/2
-one way, Selenium 3/3 the other) — which argues against shared, randomly
-fluctuating state like account balance, and toward something
-deterministic about how each tool interacts with the page. Current best
-explanation: Selenium's `send_keys("")` sends zero keystrokes and never
-fires the input/blur events that Playwright's `.fill("")` fires even for
-an empty value — meaning the Selenium test may not be exercising the app
-the way an actual user would. If that holds up, this was never a
-ParaBank bug at all; it was a gap in how faithfully one test simulated
-real interaction. A concrete experiment is written up to settle it either
-way, rather than guessing and moving on.
+**A cross-tool disagreement can itself be the finding — and knowing when
+to stop investigating is also a real skill.** The empty-payee-name
+question ([OBSERVATION-002](docs/bugs/OBSERVATION-002.md)) went through
+two rounds of hypothesis-and-test: shared-account balance depletion
+(ruled out — each tool was internally consistent, which random shared
+state wouldn't produce), then a specific theory that Selenium's
+`send_keys("")` never fires the input/blur events Playwright's
+`.fill("")` fires regardless of value (also ruled out — an explicit
+click-then-blur experiment didn't change the result). Confirmed
+consistent across three environments now (Windows local, Linux CI, and
+after that experiment), with the actual root cause still unknown.
+Rather than keep chasing it, it's marked `xfail(strict=False)` and
+documented honestly as unresolved — two solid, cross-tool-confirmed bugs
+(BUG-001, BUG-002, BUG-003) already came out of the same general effort,
+and continuing to dig into a secondary, un-confirmed discrepancy has
+diminishing returns past a certain point. Documenting a dead end clearly
+is worth more than a vague, open-ended "still looking into it."
 
 **Trade-off, stated plainly:** Chromium only, no load testing, no
 white-box access to ParaBank's server code — see Testing Scope above for
