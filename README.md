@@ -61,15 +61,6 @@ pytest -v
 Requires a real Chrome installation locally (CI doesn't need this step —
 `ubuntu-latest` runners ship with Chrome already).
 
-```powershell
-cd db-validation
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python build_and_validate.py
-pytest -v
-```
-
 ## Reports
 **Live report:** https://adyatma7.github.io/qa-project-sn/report.html
 — updates automatically after every push to `main`, pass or fail.
@@ -86,6 +77,10 @@ pytest -v
   Transfer does not enforce a sufficient-balance check — a transfer of
   999,999,999 completes successfully. Confirmed in both Playwright (2/2)
   and Selenium. `xfail(strict=False)` in both suites.
+- **[BUG-003](docs/bugs/BUG-003.md) — High.** Bill Pay has the same gap
+  as BUG-002 — an oversized payment amount is accepted. Likely shares a
+  root cause with BUG-002 rather than being a coincidence (see DEC-017).
+  Found via a documented AI-assisted testing exercise. `xfail(strict=False)`.
 - **Under investigation:** [OBSERVATION-002](docs/bugs/OBSERVATION-002.md)
   — whether Bill Pay accepts an empty payee name. Playwright (2/2) says
   rejected; Selenium (3/3) says accepted — each tool is internally

@@ -60,7 +60,11 @@ prompt, real output, real review, not a folder of screenshots.
 ## Final implemented test
 `playwright-tests/tests/ui/bill-pay/test_bill_pay.py::test_bill_pay_amount_exceeds_balance`
 — directly follows from the #4 decision above. Uses the same absurd-amount
-adversarial pattern already established for Transfer (`999999999`), and
-is marked `xfail(strict=False)` only if it turns out to reproduce
-[BUG-002](../docs/bugs/BUG-002.md)'s pattern on this feature too — not
-assumed in advance, checked.
+adversarial pattern already established for Transfer (`999999999`).
+
+**Result, confirmed by an actual run:** this is a real finding, not just a
+reasonable hypothesis. Bill Pay accepts the oversized amount exactly like
+Transfer did — filed as [BUG-003](../docs/bugs/BUG-003.md), now marked
+`xfail(strict=False)`. This is the clearest payoff in the whole project
+for keeping an AI-suggested idea *because* it connected to an existing
+finding, rather than picking from the list at random.

@@ -10,7 +10,7 @@
 | XFER-02   | Transfer exceeding balance rejected   | TC-XFER-002    | ✅ `test_transfer_exceeding_balance` (`xfail`, both frameworks) | **BUG-002**, cross-tool confirmed |
 | BILL-01   | Valid bill payment completes          | TC-BILL-001    | ✅ `test_valid_bill_payment_completes` | - (selectors confirmed, DEC-010) |
 | BILL-02   | Empty payee name is rejected          | TC-BILL-002    | ✅ `test_empty_payee_name_is_rejected` | ⚠️ **conflicting, consistently** — Playwright 2/2 rejected, Selenium 3/3 accepted. Likely a Selenium `send_keys("")` event-dispatch gap, not a ParaBank bug — see OBSERVATION-002 for the experiment to confirm. |
-| BILL-03   | Bill Pay amount exceeds balance       | TC-BILL-003    | ✅ `test_bill_pay_amount_exceeds_balance` | TBD — from AI-assisted exercise, exploratory, not yet run |
+| BILL-03   | Bill Pay amount exceeds balance       | TC-BILL-003    | ✅ `test_bill_pay_amount_exceeds_balance` (`xfail`) | **BUG-003** |
 
 Detailed step-by-step test cases (preconditions, exact steps, expected
 result) live in Jira, not here — see DEC-005. This file only tracks the

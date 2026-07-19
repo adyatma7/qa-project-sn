@@ -252,3 +252,17 @@ decision log that only records app findings and never the project's own
 errors would be a curated highlight reel, not an honest record. This one
 cost real debugging time on the other end before the actual cause was
 found — worth being explicit about that cost, not just the fix.
+
+## DEC-017: BUG-003 Likely Shares a Root Cause With BUG-002
+**Context:** `test_bill_pay_amount_exceeds_balance` (from the AI-assisted
+exercise) confirmed Bill Pay also accepts a wildly oversized amount, same
+symptom as BUG-002 on Transfer.
+**Filed separately, not merged:** as `BUG-003.md`, because the
+reproduction steps and UI involved are genuinely different features —
+but both bug reports explicitly cross-reference each other and note the
+likely shared cause (a missing balance-validation layer affecting both
+money-moving features, not two independent, coincidental bugs).
+**Why this distinction matters:** treating two related symptoms as one
+root cause versus two isolated bugs changes what a fix would actually
+look like — this is worth being able to explain, not just filing two
+reports and moving on.
