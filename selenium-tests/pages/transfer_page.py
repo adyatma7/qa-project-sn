@@ -13,7 +13,11 @@ from config import url_for
 class TransferPage:
     def __init__(self, driver):
         self.driver = driver
-        self.wait = WebDriverWait(driver, 10)
+        # 20s, not the usual 10s — this account now has 14 accounts (see
+        # docs/decision-log.md DEC-018), and transfer.htm has to render a
+        # dropdown populated from all of them. 10s was fine when this
+        # account had far fewer.
+        self.wait = WebDriverWait(driver, 20)
 
     def goto(self):
         self.driver.get(url_for("transfer.htm"))

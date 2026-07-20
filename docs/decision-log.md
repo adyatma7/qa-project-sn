@@ -266,3 +266,30 @@ money-moving features, not two independent, coincidental bugs).
 root cause versus two isolated bugs changes what a fix would actually
 look like — this is worth being able to explain, not just filing two
 reports and moving on.
+
+## DEC-018: Corrected an Earlier Wrong Hypothesis About the CI Timeouts, Bumped Selenium Timeouts
+**Context:** two previously-reliable happy-path Selenium tests
+(`test_valid_transfer_completes`, `test_valid_bill_payment_completes`)
+started timing out in CI waiting for form fields. Initial hypothesis was
+that the shared `john` account's balance had gone to some extreme value
+(from repeated confirmed BUG-002/BUG-003 large-amount transfers),
+breaking page rendering.
+**Checked, and the hypothesis was wrong.** A manual check of Accounts
+Overview showed no extreme balances — the account genuinely has **14
+separate accounts** (almost certainly created by other people's testing
+against this same long-standing public demo login over the years, not
+primarily by this project), with balances in normal ranges. Two accounts
+are negative (-$2590.00, -$100.00) — real, if not attributable to this
+project's specific test runs — which does still qualitatively corroborate
+BUG-002/BUG-003 (a real balance check would never allow a negative
+balance), just not in the dramatic way originally guessed.
+**Better explanation:** `transfer.htm` and `billpay.htm` now have to
+render a dropdown populated from 14 accounts instead of however few
+existed when these tests were first written — more server-side work per
+page load, on a heavily-shared public server, against a fixed 10-second
+`WebDriverWait`. Bumped to 20 seconds in both `TransferPage` and
+`BillPayPage` (not `LoginPage`, which isn't affected by account count).
+**Logged even though the first guess was wrong:** an incorrect hypothesis
+that gets checked and corrected is a normal, healthy part of
+investigation — the decision log records the actual process, not just
+the version that turned out right.

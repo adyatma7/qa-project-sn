@@ -4,7 +4,7 @@
 Validate the core user-facing flows of ParaBank's banking application
 through automated UI and API testing, producing a portfolio artifact that
 demonstrates real QA process — not just scripts that happen to run. Full
-project goal and audience: see `QA-PORTFOLIO-BLUEPRINT.md` Section 1.
+project goal and audience: see the root `README.md`, "Business Goal" section.
 
 ## Scope
 
@@ -58,5 +58,6 @@ reliable test fixtures under concurrent load from other testers — accepted
 for now, revisited if it causes real problems (see DEC-006).
 
 ## Schedule
-Phased, not dated — see `QA-PORTFOLIO-BLUEPRINT.md` Section 9 for the full
+Phased, not dated — see the root `README.md`'s "Phase-by-Phase Status"
+table (inside the collapsed planning reference section) for the full
 roadmap and the explicit MVP cutoff after Phase 2.

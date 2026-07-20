@@ -13,7 +13,10 @@ from config import url_for
 class BillPayPage:
     def __init__(self, driver):
         self.driver = driver
-        self.wait = WebDriverWait(driver, 10)
+        # 20s, not the usual 10s — same reasoning as TransferPage: this
+        # account now has 14 accounts to render into the "from account"
+        # dropdown. See DEC-018.
+        self.wait = WebDriverWait(driver, 20)
 
     def goto(self):
         self.driver.get(url_for("billpay.htm"))

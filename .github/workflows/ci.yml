@@ -28,17 +28,11 @@ jobs:
         with:
           name: playwright-report
           path: playwright-tests/reports/
-      - name: Package Playwright report for Pages
-        if: always()
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: playwright-tests/reports
 
   # Separate job on purpose — shows up as its own check in the GitHub UI,
-  # so both tools' results are independently visible, not merged into one
-  # green/red signal. ubuntu-latest ships with Chrome pre-installed, so no
-  # extra browser setup step is needed the way Playwright needs
-  # `playwright install`.
+  # so both tools' results are independently visible. ubuntu-latest ships
+  # with Chrome pre-installed, so no extra browser setup step is needed
+  # the way Playwright needs `playwright install`.
   selenium-tests:
     runs-on: ubuntu-latest
     steps:
@@ -56,21 +50,48 @@ jobs:
           name: selenium-report
           path: selenium-tests/reports/
 
-  # Publishes the Playwright HTML report so it's viewable by a link, not
-  # just a downloadable CI artifact. Runs even if tests failed
-  # (if: always()) — a failure report is exactly what a reader most wants
-  # to see. Only deploys from main, never from pull requests. Selenium's
-  # report is uploaded as a plain CI artifact above, not published to
-  # Pages yet — kept simple on purpose rather than merging two reports
-  # into one Pages site without being able to verify that actually works.
+  # Combines both suites' reports into one GitHub Pages site — each on
+  # its own page (not merged into a single report, since they're
+  # deliberately separate tools/frameworks), with a small index linking
+  # to both. Runs even if either test job failed (if: always()), because
+  # a failure's report is exactly what a reader most wants to see.
   deploy-report:
     if: always() && github.ref == 'refs/heads/main'
-    needs: playwright-tests
+    needs: [playwright-tests, selenium-tests]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: playwright-report
+          path: pages-site/playwright
+        continue-on-error: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: selenium-report
+          path: pages-site/selenium
+        continue-on-error: true
+      - name: Build index page
+        run: |
+          cat > pages-site/index.html << 'HTML'
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="utf-8"><title>QA Automation Portfolio — Reports</title></head>
+          <body style="font-family: sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px;">
+            <h1>QA Automation Portfolio — Reports</h1>
+            <p>Updated automatically after every push to <code>main</code>, pass or fail.</p>
+            <ul>
+              <li><a href="playwright/report.html">Playwright report</a> (primary suite: UI + API)</li>
+              <li><a href="selenium/report.html">Selenium report</a> (secondary suite: 6 cross-validated cases)</li>
+            </ul>
+          </body>
+          </html>
+          HTML
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-site
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
