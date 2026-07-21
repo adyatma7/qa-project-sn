@@ -195,6 +195,10 @@ useful reviewed that way.
   environments. Root cause still unresolved — may be a Selenium/WebDriver
   limitation rather than a ParaBank bug. Marked `xfail(strict=False)` so
   CI reflects "known, tracked" rather than an untriaged failure.
+- **Under investigation:** [OBSERVATION-003](docs/bugs/OBSERVATION-003.md)
+  — the same credentials (`john`/`demo`) were accepted by UI login and
+  rejected by the REST API login endpoint in the same CI run. Needs
+  reproduction before filing as a confirmed bug.
 
 ## Lessons Learned
 
@@ -300,6 +304,18 @@ didn't exist. The real fix was retry logic for what's most likely
 transient network flakiness between CI and a public demo server — a
 different category of problem than "wait longer," and one no amount of
 increasing the same number would have found.
+
+**Knowing when to stop tuning is as real a skill as the tuning itself.**
+After three rounds of adjustment chasing the same CI flakiness (two
+timeout increases, then retry logic), one test still failed all 3
+attempts in a single run — while, in the same general window, an
+unrelated API test also failed unexpectedly against the identical
+credentials a UI test had just used successfully. Rather than start a
+fourth round of number-tuning, this is named directly as an accepted
+characteristic of testing against a live, third-party, publicly-shared
+demo server this project doesn't control (DEC-021) — the retry mechanism
+stays as a reasonable baseline, and an occasional red mark on these
+specific tests is documented as expected, not chased indefinitely.
 
 ## Future Improvements
 A real production version of this project would need, in rough priority

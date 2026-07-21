@@ -338,3 +338,30 @@ longer expected to be the actual fix.
 edited into one:** it shows the real diagnostic path — two plausible
 guesses, then verified data that overturned both — which is more
 instructive than only keeping the version that turned out right.
+
+## DEC-021: Accepting Some Irreducible Flakiness Against a Third-Party Live Demo
+**Context:** after DEC-018/019/020, `test_valid_bill_payment_completes`
+still failed all 3 attempts (1 original + 2 reruns) in one CI run — the
+retry mechanism worked correctly, it just wasn't enough to ride out
+whatever was happening that specific run. In the same general window,
+Playwright's API login test also failed unexpectedly (see
+OBSERVATION-003), with UI login for the identical credentials succeeding
+in the same run.
+**Decision:** not tuning rerun counts or delays further right now. Three
+consecutive rounds of adjustment (bigger timeout ×2, then retry) chasing
+the same class of symptom is a reasonable amount of effort for CI
+flakiness against a public, third-party, shared demo server this project
+doesn't control. Continuing to adjust numbers has clearly diminishing
+returns at this point.
+**What this project does instead:** documents the flakiness honestly
+(this entry, OBSERVATION-003), keeps the retry mechanism as a reasonable
+baseline mitigation, and treats an occasional CI red mark on these
+specific tests as an accepted, understood characteristic of testing
+against a live third-party dependency — not silently, but explicitly
+named as such.
+**Why this is the right call, not giving up:** the same discipline
+applied to OBSERVATION-002 (two hypotheses tested, both disproven,
+documented as unresolved rather than forced) applies here — knowing when
+further investigation of an external dependency's occasional flakiness
+has hit diminishing returns is itself the mature, real-world QA judgment
+call, not a failure to fully "solve" CI.
