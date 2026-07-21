@@ -3,7 +3,7 @@
 [![QA Automation CI](https://github.com/adyatma7/qa-project-sn/actions/workflows/ci.yml/badge.svg)](https://github.com/adyatma7/qa-project-sn/actions/workflows/ci.yml)
 
 > **Status: Phases 0–5 complete.** 17 automated tests across two
-> frameworks, 3 confirmed bugs, 1 honestly-documented open investigation.
+> frameworks, 4 confirmed bugs, 1 honestly-documented open investigation.
 > This README is the single source of truth for the project — the
 > planning document that shaped it is merged in below, not kept as a
 > separate, driftable file.
@@ -14,7 +14,7 @@ banking demo application, using two complementary automation frameworks
 (Playwright and Selenium) in Python. It's built to demonstrate the full
 QA lifecycle — requirement analysis, risk-based test design, automation,
 execution, structured bug reporting, and CI/CD — not just scripts that
-happen to run. Along the way it found three real, reproducible bugs in
+happen to run. Along the way it found four real, reproducible bugs in
 the application under test, all documented with evidence and reproduction
 steps, and one investigation that's still honestly unresolved rather than
 forced to a tidy conclusion.
@@ -189,16 +189,18 @@ useful reviewed that way.
   as BUG-002 — an oversized payment amount is accepted. Likely shares a
   root cause with BUG-002 rather than being a coincidence. Found via a
   documented AI-assisted testing exercise. `xfail(strict=False)`.
+- **[BUG-004](docs/bugs/BUG-004.md) — High.** The REST API login endpoint
+  intermittently rejects valid credentials (`john`/`demo`) with a 400,
+  while UI login with the identical credentials succeeds at the same
+  time — confirmed twice, close together. Different failure direction
+  than BUG-001 (that one fails open; this one fails closed).
+  `xfail(strict=False)`.
 - **Under investigation:** [OBSERVATION-002](docs/bugs/OBSERVATION-002.md)
   — whether Bill Pay accepts an empty payee name. Playwright consistently
   says rejected; Selenium consistently says accepted, confirmed across 3
   environments. Root cause still unresolved — may be a Selenium/WebDriver
   limitation rather than a ParaBank bug. Marked `xfail(strict=False)` so
   CI reflects "known, tracked" rather than an untriaged failure.
-- **Under investigation:** [OBSERVATION-003](docs/bugs/OBSERVATION-003.md)
-  — the same credentials (`john`/`demo`) were accepted by UI login and
-  rejected by the REST API login endpoint in the same CI run. Needs
-  reproduction before filing as a confirmed bug.
 
 ## Lessons Learned
 
@@ -376,7 +378,7 @@ Know where every likely question is answered before walking in:
 |---|---|
 | Why Playwright over Selenium/Cypress? | `docs/decision-log.md` → DEC-001 |
 | Why Python over JavaScript/TypeScript? | DEC-006 |
-| Walk me through a bug you found | `docs/bugs/BUG-001.md`, `BUG-002.md`, or `BUG-003.md` |
+| Walk me through a bug you found | `docs/bugs/BUG-001.md`, `BUG-002.md`, `BUG-003.md`, or `BUG-004.md` |
 | How do you handle test data / independence? | `playwright-tests/utils/test_data_generator.py` |
 | Why only 6 Selenium tests, not a full port? | DEC-002, `selenium-tests/README.md` |
 | How would you validate the database here? | DEC-003, `db-validation/README.md` |

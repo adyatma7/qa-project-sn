@@ -40,3 +40,14 @@ occasionally has a rough window, out of this project's control" becomes
 the more honest conclusion than continuing to hunt for a root cause in
 our own code. This entry exists to track the finding, not to promise
 it'll be fully resolved.
+
+---
+
+## RESOLVED — confirmed, promoted to BUG-004
+
+Re-ran the API call, then immediately ran the UI login test with the
+identical credentials in the same session: API rejected (400, same
+message as before), UI login passed cleanly. Second confirmation of the
+exact asymmetry, close together in time — ruling out "the account's
+password quietly changed" as the explanation (that would have broken UI
+login too). See `BUG-004.md` for the full write-up.

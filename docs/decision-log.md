@@ -365,3 +365,17 @@ documented as unresolved rather than forced) applies here — knowing when
 further investigation of an external dependency's occasional flakiness
 has hit diminishing returns is itself the mature, real-world QA judgment
 call, not a failure to fully "solve" CI.
+
+## DEC-022: BUG-004 Confirmed via Deliberate Close-Together Reproduction
+**Context:** OBSERVATION-003 needed one specific check to distinguish two
+explanations: a real UI-vs-API authentication inconsistency, or the
+shared account's password having simply changed (which would break UI
+login too).
+**Method:** ran the API call, then immediately ran the UI login test with
+identical credentials in the same session — deliberately close together
+in time to control for "the password changed since the last check."
+**Result:** API rejected (400, same message), UI login passed cleanly,
+seconds apart. Confirms a real inconsistency between two auth code paths,
+not a stale-credential explanation.
+**Resolution:** filed as BUG-004, `xfail(strict=False)` added to
+`test_valid_login_returns_customer_via_api`, consistent with BUG-001/002/003.
