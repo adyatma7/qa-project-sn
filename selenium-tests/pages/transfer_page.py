@@ -13,11 +13,12 @@ from config import url_for
 class TransferPage:
     def __init__(self, driver):
         self.driver = driver
-        # 20s, not the usual 10s — this account now has 14 accounts (see
-        # docs/decision-log.md DEC-018), and transfer.htm has to render a
-        # dropdown populated from all of them. 10s was fine when this
-        # account had far fewer.
-        self.wait = WebDriverWait(driver, 20)
+        # 30s now, not 20s — 20s fixed billpay.htm's timeout (1 account
+        # dropdown) but transfer.htm still timed out with it. Transfer.htm
+        # has to populate TWO account dropdowns (from AND to) against the
+        # same 14-account login, roughly double the per-page lookup work.
+        # See DEC-018/DEC-019.
+        self.wait = WebDriverWait(driver, 30)
 
     def goto(self):
         self.driver.get(url_for("transfer.htm"))

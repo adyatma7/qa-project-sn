@@ -293,3 +293,22 @@ page load, on a heavily-shared public server, against a fixed 10-second
 that gets checked and corrected is a normal, healthy part of
 investigation — the decision log records the actual process, not just
 the version that turned out right.
+
+## DEC-019: 20s Wasn't Enough Either, Specifically for Transfer
+**Context:** after DEC-018 bumped both `TransferPage` and `BillPayPage`
+to 20s, a re-run in CI showed `test_valid_bill_payment_completes` now
+passing, but `test_valid_transfer_completes` still timing out on the
+same first-field wait.
+**Refined explanation:** `transfer.htm` populates two account dropdowns
+(from AND to) against the same 14-account login; `billpay.htm` only
+populates one. Roughly double the per-page account-lookup work, which
+20s fixed for one page but not the other.
+**Fix:** bumped `TransferPage`'s wait specifically to 30s, left
+`BillPayPage` at 20s since it's already confirmed sufficient.
+**Why logged as a separate entry instead of just editing DEC-018:** the
+first fix was a real, verified improvement (it did fix Bill Pay) — it
+just wasn't sufficient for a specific case. Recording it as "not enough
+yet" rather than silently bumping the earlier number keeps the actual
+sequence of what was tried and what result each attempt produced,
+which is more useful later than a single number that looks like it was
+right the first time.
