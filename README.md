@@ -288,6 +288,19 @@ original fixed wait allowed for. The shared-account risk named back at
 the start of this project (DEC-006) stopped being a hypothetical the
 moment there were literally 14 accounts to prove it.
 
+**Two guesses about a timeout, both overturned by five minutes of actual
+measurement.** A previously-reliable Selenium test started timing out in
+CI. First guess: extreme account balance breaking page rendering — wrong
+(checked manually, balances were normal). Second guess: 14 accounts
+making the dropdown slow to render — also wrong, disproven by DevTools
+Network tab and PageSpeed Insights showing the actual page load under 4
+seconds, nowhere near the 30-second wait already in place. Two rounds of
+bumping a timeout number were solving a problem that measurement showed
+didn't exist. The real fix was retry logic for what's most likely
+transient network flakiness between CI and a public demo server — a
+different category of problem than "wait longer," and one no amount of
+increasing the same number would have found.
+
 ## Future Improvements
 A real production version of this project would need, in rough priority
 order:

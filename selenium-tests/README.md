@@ -47,6 +47,16 @@ falls back to a fixed `time.sleep()`, which is slower and less robust.
 Worth raising unprompted in an interview: this is a genuine limitation of
 vanilla Selenium, not a gap in this code specifically.
 
+### Retry on transient CI network flakiness, not bigger timeouts
+Happy-path tests occasionally timed out in CI even after generous
+`WebDriverWait` increases (20s, then 30s). Manual verification (DevTools
+Network tab, PageSpeed Insights) showed the actual pages load in under 4
+seconds — the timeouts were never really about render time. `pytest.ini`
+now uses `pytest-rerunfailures` (`--reruns 2 --reruns-delay 3`) instead,
+since the real cause is most likely occasional network flakiness between
+CI and a public demo server, not anything a bigger fixed wait would fix.
+Full story: `docs/decision-log.md` DEC-018 through DEC-020.
+
 ### Isolated dependencies
 This folder has its own `requirements.txt` and its own virtual
 environment, deliberately separate from `playwright-tests/`, to avoid any

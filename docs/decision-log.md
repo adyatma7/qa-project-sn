@@ -312,3 +312,29 @@ yet" rather than silently bumping the earlier number keeps the actual
 sequence of what was tried and what result each attempt produced,
 which is more useful later than a single number that looks like it was
 right the first time.
+
+## DEC-020: Stopped Guessing Bigger Timeouts, Added Retry Instead
+**Context:** `test_valid_transfer_completes` kept timing out in CI even
+after two rounds of increasing `WebDriverWait` (10s → 20s → 30s, DEC-018,
+DEC-019).
+**What actually settled this:** manual verification, not another guess —
+DevTools Network tab showed `transfer.htm` finishing in ~850ms and the
+heavier `overview.htm` (14 accounts) in ~3.4s; PageSpeed Insights showed
+desktop Core Web Vitals fully passing. If the real page load is under
+4 seconds, a 30-second timeout was never the actual constraint — the
+"14 accounts render slowly" hypothesis from DEC-018/019 was wrong.
+**Corrected explanation:** the timeouts are most likely transient network
+flakiness between GitHub Actions' runners (Azure-hosted, per the CI
+platform string) and ParaBank's public server — the kind of thing a
+bigger fixed wait can't reliably fix, because the problem isn't render
+time, it's an occasional dropped/slow connection.
+**Fix:** added `pytest-rerunfailures` (`--reruns 2 --reruns-delay 3`) to
+the Selenium suite instead of a fourth timeout increase. Retrying a
+transient network hiccup is the correct tool; guessing a bigger number
+was solving the wrong problem. `WebDriverWait` values are left at their
+current 20s/30s — not reverted, since they're still reasonable, just no
+longer expected to be the actual fix.
+**Why this sequence (DEC-018 → 019 → 020) is left as three entries, not
+edited into one:** it shows the real diagnostic path — two plausible
+guesses, then verified data that overturned both — which is more
+instructive than only keeping the version that turned out right.
