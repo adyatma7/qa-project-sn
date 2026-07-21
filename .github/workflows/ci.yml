@@ -8,6 +8,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
 jobs:
   playwright-tests:
@@ -89,6 +90,16 @@ jobs:
           </body>
           </html>
           HTML
+      # Menghapus artifact github-pages lama jika job ini merupakan hasil "Re-run"
+      - name: Clean up old github-pages artifact
+        run: |
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts \
+          --jq '.artifacts[] | select(.name=="github-pages") | .id' | \
+          xargs -I {} gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/{}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        
       - uses: actions/upload-pages-artifact@v3
         with:
           path: pages-site
